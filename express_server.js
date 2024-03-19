@@ -6,6 +6,15 @@ app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 
+const generateRandomString = function() {
+  const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomString = '';
+  for(let i = 0; i < 6; i++) {
+    randomString += all.charAt(Math.floor(Math.random() * all.length));
+  }
+  return randomString;
+}
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -38,16 +47,12 @@ app.get("/hello", (req, res) => {
 });
 
 app.post("/urls", (req, res) => { 
-  let body = req.body.longURL;
-  const generateRandomString = function() {
-    const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let randomString = '';
-    for(let i = 0; i < 6; i++) {
-      randomString += all.charAt(Math.floor(Math.random() * all.length));
-    }
-    return randomString;
+  if (req.body.longURL === "") {
+    res.send("Please enter a valid URL.")
+    throw new Error("Invalid URL");
   }
-  let shortURL = generateRandomString();
+  const body = req.body.longURL;
+  const shortURL = generateRandomString();
   urlDatabase[shortURL] = body;
   res.redirect(`/urls/${shortURL}`);
 });
