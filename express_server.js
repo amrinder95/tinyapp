@@ -37,22 +37,26 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // log the POST request body to the console
-  res.send("Ok"); //respond with 'ok'
+app.post("/urls", (req, res) => { 
+  let body = req.body.longURL;
+  const generateRandomString = function() {
+    const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randomString = '';
+    for(let i = 0; i < 6; i++) {
+      randomString += all.charAt(Math.floor(Math.random() * all.length));
+    }
+    return randomString;
+  }
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = body;
+  res.redirect(`/urls/${shortURL}`);
 });
 
-const generateRandomString = function() {
-  const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randomString = '';
-  for(let i = 0; i < 6; i++) {
-    randomString += all.charAt(Math.floor(Math.random() * all.length));
-  }
-  return randomString;
-}
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-console.log(generateRandomString());
