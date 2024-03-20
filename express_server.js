@@ -2,6 +2,12 @@ const express = require('express');
 const app = express();
 const cookies = require('cookie-parser');
 const PORT = 8080; // default port 8080
+const users = require('./data/userData')
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
 
 app.set("view engine", "ejs");
 
@@ -17,11 +23,6 @@ const generateRandomString = function() {
   return randomString;
 }
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -31,17 +32,17 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { username: req.cookies["username"], urls: urlDatabase };
+  const templateVars = { user: req.cookies["user_id"], urls: urlDatabase, userinfo: users };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"]};
+  const templateVars = { user: req.cookies["user_id"], userinfo: users };
   res.render("urls_new", templateVars)
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { username: req.cookies["username"], id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { user: req.cookies["user_id"], id: req.params.id, longURL: urlDatabase[req.params.id], userinfo: users };
   res.render("urls_show", templateVars);
 });
 
@@ -76,19 +77,30 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  res.cookie("user_id", req.body.user_id);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
+  console.log(users);
   res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"]};
+  const templateVars = { user: req.cookies["user_id"]};
   res.render("register", templateVars);
 })
+
+app.post("/register", (req, res) => {
+  userID = generateRandomString();
+  users[userID] = { id: userID,
+                    email: req.body.email,
+                    password: req.body.password
+                  };
+  res.cookie("user_id", userID);
+  res.redirect("/urls");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
