@@ -29,7 +29,7 @@ const findUserByEmail = function(email) {
       return users[user];
     }
   }
-  return null;
+  return false;
 }
 
 app.get("/", (req, res) => {
@@ -47,7 +47,6 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = { user: req.cookies["user_id"], userinfo: users };
-  console.log(users);
   res.render("urls_new", templateVars)
 });
 
@@ -62,7 +61,7 @@ app.get("/hello", (req, res) => {
 
 app.post("/urls", (req, res) => { 
   if (req.body.longURL === "") {
-    res.send("Please enter a valid URL.")
+    res.send("Please enter a valid URL")
     throw new Error("Invalid URL");
   }
   const body = req.body.longURL;
@@ -103,11 +102,12 @@ app.get("/register", (req, res) => {
 })
 
 app.post("/register", (req, res) => {
-  if (req.body.email === "" || req.body.password === "") {
+  if (!req.body.email || !req.body.password) {
     res.status(400);
     res.send("Invalid email and/or password");
+    return;
   }
-  if (findUserByEmail(req.body.email) === null) {
+  if (findUserByEmail(!req.body.email)) {
   userID = generateRandomString();
   users[userID] = { id: userID,
                     email: req.body.email,
@@ -118,7 +118,12 @@ app.post("/register", (req, res) => {
   } else {
     res.status(400);
     res.send("Email already exists");
+    return;
   } 
+});
+
+app.get("/login", (req, res) => {
+  res.render("login")
 });
 
 app.listen(PORT, () => {
