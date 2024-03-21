@@ -112,7 +112,7 @@ app.post("/urls/:id", (req, res) => {
     res.send("You are not allowed to update this link.")
     return;
   }
-  urlDatabase[req.params.id] = {longURL: req.body.updatedURL};
+  urlDatabase[req.params.id].longURL = req.body.updatedURL;
   res.redirect("/urls");
 });
 
