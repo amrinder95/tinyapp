@@ -3,10 +3,10 @@ const app = express();
 const cookies = require('cookie-parser');
 const PORT = 8080; // default port 8080
 const users = require('./data/userData')
+const bcrypt = require("bcryptjs");
 
 const urlDatabase = {
-  "b2xVn2": {longURL: "http://www.lighthouselabs.ca", userID: "aJ48lW"},
-  "9sm5xK": {longURL: "http://www.google.com", userID: "aJ48lW"}
+
 };
 
 app.set("view engine", "ejs");
@@ -52,6 +52,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   let userid = req.cookies["user_id"]
   let newDatabase = urlsForUser(userid);
+  console.log(users);
   const templateVars = { user: req.cookies["user_id"], urls: newDatabase, email: req.cookies["email"]};
   res.render("urls_index", templateVars);
 });
@@ -117,12 +118,14 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  if(!findUserByEmail(req.body.email) || req.body.password !== findUserByEmail(req.body.email).password){
-    res.status(403);
-    res.send("Invalid email or password");
-    return;
+  if(!findUserByEmail(req.body.email)){
+    return res.status(403).send("Invalid email or password");
   }
   let userid = findUserByEmail(req.body.email).id;
+  console.log(users[userid]);
+  if (!bcrypt.compareSync(req.body.password, users[userid].password)) {
+    return res.status(403).send("Invalid email or password");
+  }
   res.cookie("user_id", userid);
   res.cookie("email", req.body.email);
   res.redirect("/urls");
@@ -151,9 +154,11 @@ app.post("/register", (req, res) => {
   }
   if (!findUserByEmail(req.body.email)) {
   userID = generateRandomString();
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password,10);
   users[userID] = { id: userID,
                     email: req.body.email,
-                    password: req.body.password
+                    password: hashedPassword
                   };
   res.cookie("user_id", userID);
   res.cookie("email", req.body.email);
