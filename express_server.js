@@ -41,22 +41,18 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"], urls: urlDatabase, userinfo: users };
+  const templateVars = { user: req.cookies["user_id"], urls: urlDatabase, email: req.cookies["email"]};
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"], userinfo: users };
+  const templateVars = { user: req.cookies["user_id"], email: req.cookies["email"]};
   res.render("urls_new", templateVars)
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"], id: req.params.id, longURL: urlDatabase[req.params.id], userinfo: users };
+  const templateVars = { user: req.cookies["user_id"], id: req.params.id, longURL: urlDatabase[req.params.id], email: req.cookies["email"]};
   res.render("urls_show", templateVars);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.post("/urls", (req, res) => { 
@@ -86,14 +82,21 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("user_id", req.body.user_id);
+  if(!findUserByEmail(req.body.email) || req.body.password !== findUserByEmail(req.body.email).password){
+    res.status(403);
+    res.send("Invalid email or password");
+    return;
+  }
+  let userid = findUserByEmail(req.body.email).id;
+  res.cookie("user_id", userid);
+  res.cookie("email", req.body.email);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  console.log(users);
-  res.redirect("/urls");
+  res.clearCookie("email");
+  res.redirect("/login");
 });
 
 app.get("/register", (req, res) => {
@@ -107,13 +110,14 @@ app.post("/register", (req, res) => {
     res.send("Invalid email and/or password");
     return;
   }
-  if (findUserByEmail(!req.body.email)) {
+  if (!findUserByEmail(req.body.email)) {
   userID = generateRandomString();
   users[userID] = { id: userID,
                     email: req.body.email,
                     password: req.body.password
                   };
   res.cookie("user_id", userID);
+  res.cookie("email", req.body.email);
   res.redirect("/urls");
   } else {
     res.status(400);
@@ -123,7 +127,8 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("login")
+  const templateVars = { user: req.cookies["user_id"]};
+  res.render("login", templateVars)
 });
 
 app.listen(PORT, () => {
