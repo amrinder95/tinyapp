@@ -47,6 +47,10 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = { user: req.cookies["user_id"], email: req.cookies["email"]};
+  if(!req.cookies["user_id"]){
+    res.redirect("/login");
+    return;
+  }
   res.render("urls_new", templateVars)
 });
 
@@ -56,6 +60,10 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => { 
+  if(!req.cookies["user_id"]){
+    res.send("You must be logged in to submit a URL");
+    return;
+  }
   if (req.body.longURL === "") {
     res.send("Please enter a valid URL")
     throw new Error("Invalid URL");
@@ -67,6 +75,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
+  if(urlDatabase[req.params.id] === undefined) {
+    res.send("Invalid short URL");
+    return;
+  }
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
@@ -100,7 +112,11 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"]};
+  const templateVars = { user: req.cookies["user_id"], email: req.cookies["email"]};
+  if(req.cookies["user_id"]) {
+    res.redirect("/urls");
+    return;
+  }
   res.render("register", templateVars);
 })
 
@@ -127,7 +143,11 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: req.cookies["user_id"]};
+  const templateVars = { user: req.cookies["user_id"], email: req.cookies["email"]};
+  if(req.cookies["user_id"]) {
+    res.redirect("/urls");
+    return;
+  }
   res.render("login", templateVars)
 });
 
