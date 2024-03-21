@@ -14,7 +14,12 @@
 
 <body>
   <%- include('partials/_header') %>
-  <main style="margin: 1em;">
+  <% if(!user) { %>
+    <main style="margin: 1em;">
+    <h3>Please register or login to continue</h3>
+  </main>
+  <% } else { %>
+    <main style="margin: 1em;">
     <h3>My URLs</h3>
     <table class="table">
       <thead>
@@ -29,7 +34,7 @@
         <% for (let id in urls) { %>
           <tr>
             <td><%= id %></td>
-            <td><%= urls[id] %></td>
+            <td><%= urls[id].longURL %></td>
             <td><form method="GET" action="/urls/<%= id %>"><button type="submit" class="btn btn-primary">Edit</button></form></td>
             <td><form method="POST" action="/urls/<%= id %>/delete"><button type="submit" class="btn btn-primary">Delete</button></form></td>
           </tr>     
@@ -37,7 +42,7 @@
       </tbody>
     </table>
   </main>
-
+  <% } %>
   <script
     src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
