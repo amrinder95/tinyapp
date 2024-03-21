@@ -14,6 +14,15 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookies());
 
+const urlsForUser = function(userid) {
+  let newDatabase = {};
+  for (let user in urlDatabase) {
+    if(urlDatabase[user].userID === userid)
+    newDatabase[user] = {longURL: urlDatabase[user].longURL};
+  }
+  return newDatabase;
+}
+
 const generateRandomString = function() {
   const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let randomString = '';
@@ -41,16 +50,8 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const urlsForUser = function() {
-    let newDatabase = {};
-    let userid = req.cookies["user_id"]
-    for (let user in urlDatabase) {
-      if(urlDatabase[user].userID === userid)
-      newDatabase[user] = {longURL: urlDatabase[user].longURL};
-    }
-    return newDatabase;
-  }
-  let newDatabase = urlsForUser();
+  let userid = req.cookies["user_id"]
+  let newDatabase = urlsForUser(userid);
   const templateVars = { user: req.cookies["user_id"], urls: newDatabase, email: req.cookies["email"]};
   res.render("urls_index", templateVars);
 });
@@ -80,7 +81,7 @@ app.post("/urls", (req, res) => {
   }
   if (req.body.longURL === "") {
     res.send("Please enter a valid URL")
-    throw new Error("Invalid URL");
+    return;
   }
   const body = req.body.longURL;
   const shortURL = generateRandomString();
@@ -107,6 +108,10 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
+  if(urlDatabase[req.params.id].userID !== req.cookies["user_id"]){
+    res.send("You are not allowed to update this link.")
+    return;
+  }
   urlDatabase[req.params.id] = {longURL: req.body.updatedURL};
   res.redirect("/urls");
 });
