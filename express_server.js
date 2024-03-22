@@ -4,10 +4,9 @@ const PORT = 8080; // default port 8080
 const users = require('./data/userData');
 const bcrypt = require("bcryptjs");
 const cookieSession = require('cookie-session');
-const findUserByEmail = require('./helpers').findUserByEmail;
-const urlDatabase = require('./data/userData').urlDatabase;
-const urlsForUser = require('./helpers').urlsForUser;
-const generateRandomString = require('./helpers').generateRandomString;
+const { findUserByEmail, urlsForUser, generateRandomString } = require('./helpers')
+const { urlDatabase } = require('./data/userData')
+
 
 //RENDER CONFIGURATION
 app.set("view engine", "ejs");

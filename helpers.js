@@ -1,4 +1,3 @@
-const urlDatabase = require('./data/userData').urlDatabase;
 
 //filters users database using email
 const findUserByEmail = function(email, database) {
@@ -12,12 +11,12 @@ const findUserByEmail = function(email, database) {
 
 //only shows urls for user with associated userid
 const urlsForUser = function(userid, database) {
-  let newDatabase = {};
+  let userURLS = {};
   for (let user in database) {
     if(database[user].userID === userid)
-    newDatabase[user] = {longURL: database[user].longURL};
+    userURLS[user] = {longURL: database[user].longURL};
   }
-  return newDatabase;
+  return userURLS;
 }
 
 //generates random id 
