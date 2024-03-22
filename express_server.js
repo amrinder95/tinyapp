@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 3000; // default port 3000
 const users = require('./data/userData');
 const bcrypt = require("bcryptjs");
 const cookieSession = require('cookie-session');
@@ -13,6 +13,7 @@ app.set("view engine", "ejs");
 
 //MIDDLEWARE
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cookieSession({
   name:'session',
   keys: ['thelqwrhjlq']
@@ -21,7 +22,9 @@ app.use(cookieSession({
 //APP ROUTE HANDLING
 //redirects to home page
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  if(!req.session.user_id){
+    return res.redirect("/login");
+  } res.redirect("/urls");
 });
 
 //shows url database in json
@@ -51,7 +54,10 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   //if user is not logged in, returns html error message
   if(!req.session.user_id) {
-    return res.send("You must be logged in to view this page");
+    return res.status(404).send("You must be logged in to view this page");
+  }
+  if(urlDatabase[req.params.id].userID !== req.session.user_id) {
+    return res.status(403).send("This url does not belong to you")
   }
   const templateVars = { user: req.session.user_id, id: req.params.id, longURL: urlDatabase[req.params.id].longURL, email: req.session.email, userid: urlDatabase[req.params.id].userID};
   res.render("urls_show", templateVars);
