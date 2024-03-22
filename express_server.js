@@ -1,55 +1,25 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
-const users = require('./data/userData')
+const users = require('./data/userData');
 const bcrypt = require("bcryptjs");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
+const findUserByEmail = require('./helpers').findUserByEmail;
+const urlDatabase = require('./data/userData').urlDatabase;
+const urlsForUser = require('./helpers').urlsForUser;
+const generateRandomString = require('./helpers').generateRandomString;
 
-const urlDatabase = {
-
-};
-
-//render settings
+//RENDER CONFIGURATION
 app.set("view engine", "ejs");
 
-//middleware
+//MIDDLEWARE
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name:'session',
   keys: ['thelqwrhjlq']
 }));
 
-//functions
-//only shows urls for user with associated userid
-const urlsForUser = function(userid) {
-  let newDatabase = {};
-  for (let user in urlDatabase) {
-    if(urlDatabase[user].userID === userid)
-    newDatabase[user] = {longURL: urlDatabase[user].longURL};
-  }
-  return newDatabase;
-}
-
-//generates random id 
-const generateRandomString = function() {
-  const all = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randomString = '';
-  for(let i = 0; i < 6; i++) {
-    randomString += all.charAt(Math.floor(Math.random() * all.length));
-  }
-  return randomString;
-}
-
-//filters users database using email
-const findUserByEmail = function(email) {
-  for (let user in users) {
-    if(users[user].email === email) {
-      return users[user];
-    }
-  }
-  return false;
-}
-
+//APP ROUTE HANDLING
 //redirects to home page
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -63,8 +33,8 @@ app.get("/urls.json", (req, res) => {
 //homepage or landing page
 app.get("/urls", (req, res) => {
   let userid = req.session.user_id
-  let newDatabase = urlsForUser(userid);
-  const templateVars = { user: req.session.user_id, urls: newDatabase, email: req.session.email};
+  urls = urlsForUser(userid, urlDatabase);
+  const templateVars = { user: req.session.user_id, urls: urls, email: req.session.email};
   res.render("urls_index", templateVars);
 });
 
@@ -139,10 +109,10 @@ app.post("/urls/:id", (req, res) => {
 //checks user info for login
 app.post("/login", (req, res) => {
   //if email is incorrect, returns html error message
-  if(!findUserByEmail(req.body.email)){
+  if(!findUserByEmail(req.body.email, users)){
     return res.status(403).send("Invalid email or password");
   }
-  let userid = findUserByEmail(req.body.email).id;
+  let userid = findUserByEmail(req.body.email, users);
   //if password is incorrect, returns html error message
   if (!bcrypt.compareSync(req.body.password, users[userid].password)) {
     return res.status(403).send("Invalid email or password");
@@ -175,7 +145,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Invalid email and/or password");
   }
   //checks if email exists, if not; registers user
-  if (!findUserByEmail(req.body.email)) {
+  if (!findUserByEmail(req.body.email, users)) {
   userID = generateRandomString();
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password,10);
